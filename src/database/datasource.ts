@@ -7,7 +7,7 @@ export const AppDataSource = new DataSource({
   type: 'postgres',
   synchronize: false,
   logging: false,
-  entities: [`${__dirname}/**/entities/*.entity.{ts,js}`],
+  entities: [`${__dirname}/../**/*.entity.{ts,js}`],
   migrations: [`${__dirname}/**/migrations/*.{ts,js}`],
   host: DB_HOST,
   username: DB_USER,

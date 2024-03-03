@@ -3,7 +3,7 @@ import { AuctionState } from './enum/auction-state.enum';
 import { Item } from './item';
 import { LocalizedString } from './localized-string';
 
-type AuctionLimit = Record<AuctionRuleKey, unknown>;
+export type AuctionLimit = Record<AuctionRuleKey, unknown>;
 
 interface AuctionProperties {
   id: string;
