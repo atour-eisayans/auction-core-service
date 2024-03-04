@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString } from 'class-validator';
-import { ValidationErrorMessage } from 'src/shared/validation/validation-error-message';
+import { ValidationErrorMessage } from '../../../shared/validation/validation-error-message';
 
 export class AuctionCreateDto {
   @IsString({ message: ValidationErrorMessage.MustBeString })
