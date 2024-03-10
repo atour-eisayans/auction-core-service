@@ -1,4 +1,4 @@
-import { CurrencyEntity } from '../currency/currency.entity';
+import { CurrencyEntity } from '../../currency/entities/currency.entity';
 import {
   Column,
   CreateDateColumn,

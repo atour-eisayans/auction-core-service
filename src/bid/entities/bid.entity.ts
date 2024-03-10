@@ -1,39 +1,34 @@
+import { UserEntity } from '../../user/entities/user.entity';
+import { AuctionEntity } from '../../auction/entities/auction.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AuctionEntity } from './auction.entity';
-import { UserEntity } from '../user/user.entity';
 
-@Entity({ name: 'auction_result' })
-export class AuctionResultEntity {
+@Entity({ name: 'bid' })
+export class BidEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @OneToOne(() => AuctionEntity, { onDelete: 'CASCADE' })
+  @ManyToOne(() => AuctionEntity, { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'auction_id', referencedColumnName: 'id' })
   auction!: AuctionEntity;
 
-  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL' })
+  @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  winner!: UserEntity;
+  user!: UserEntity;
 
-  @Column({
-    type: 'timestamp with time zone',
-    name: 'finishedAt',
-    nullable: true,
-  })
-  finishedAt?: Date;
+  @Column({ type: 'int', name: 'total_bids', default: 1 })
+  totalBids!: number;
 
   @CreateDateColumn({ type: 'timestamp with time zone', name: 'created_at' })
   createdAt!: Date;
 
   @UpdateDateColumn({ type: 'timestamp with time zone', name: 'updated_at' })
-  updatedAt!: Date;
+  lastUpdatedAt!: Date;
 }

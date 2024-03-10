@@ -43,7 +43,6 @@ export const generateValidationErrors = (errors: ValidationError[]) => {
 
 export const validationPipeConfig: ValidationPipeOptions = {
   exceptionFactory: (errors: ValidationError[]): BadRequestException => {
-    console.log(errors);
     const message = generateValidationErrors(errors);
 
     return new BadRequestException({
