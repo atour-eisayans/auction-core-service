@@ -1,7 +1,7 @@
-import { ItemEntity } from '../item/item.entity';
-import { AuctionLimit } from '../domain/auction';
-import { AuctionState } from '../domain/enum/auction-state.enum';
-import { LocalizedString } from '../domain/localized-string';
+import { ItemEntity } from '../../item/entities/item.entity';
+import { AuctionLimit } from '../../domain/auction';
+import { AuctionState } from '../../domain/enum/auction-state.enum';
+import { LocalizedString } from '../../domain/localized-string';
 import {
   Column,
   CreateDateColumn,
