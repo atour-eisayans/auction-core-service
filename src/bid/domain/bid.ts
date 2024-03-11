@@ -1,5 +1,5 @@
-import { Auction } from './auction';
-import { User } from './user';
+import { Auction } from '../../auction/domain/auction';
+import { User } from '../../user/domain/user';
 
 interface BidProperties {
   id: string;

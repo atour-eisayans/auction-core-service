@@ -5,7 +5,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { LocalizedString } from '../../domain/localized-string';
+import { LocalizedString } from '../../shared/domain/localized-string';
 
 @Entity({ name: 'item_category' })
 export class ItemCategoryEntity {

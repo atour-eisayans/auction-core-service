@@ -1,7 +1,7 @@
 import { ItemEntity } from '../../item/entities/item.entity';
-import { AuctionLimit } from '../../domain/auction';
-import { AuctionState } from '../../domain/enum/auction-state.enum';
-import { LocalizedString } from '../../domain/localized-string';
+import { AuctionLimit } from '../domain/auction';
+import { AuctionState } from '../../shared/enum/auction-state.enum';
+import { LocalizedString } from '../../shared/domain/localized-string';
 import {
   Column,
   CreateDateColumn,
@@ -20,8 +20,12 @@ export class AuctionEntity {
   @Column({ type: 'jsonb', name: 'name' })
   name!: LocalizedString;
 
-  @Column({ type: 'timestamp with time zone', name: 'start_at' })
-  startAt!: Date;
+  @Column({
+    type: 'timestamp with time zone',
+    name: 'start_at',
+    nullable: true,
+  })
+  startAt?: Date;
 
   @Column({
     type: 'timestamp with time zone',
@@ -33,7 +37,7 @@ export class AuctionEntity {
   @Column({ type: 'varchar', name: 'state' })
   state!: AuctionState;
 
-  @Column({ type: 'jsonb', name: 'limits' })
+  @Column({ type: 'jsonb', name: 'limits', default: '{}' })
   limits?: AuctionLimit;
 
   @ManyToOne(() => ItemEntity, { onDelete: 'SET NULL', nullable: false })
