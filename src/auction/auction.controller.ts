@@ -4,6 +4,7 @@ import {
   Get,
   HttpStatus,
   InternalServerErrorException,
+  NotFoundException,
   Param,
   Post,
 } from '@nestjs/common';
@@ -34,14 +35,31 @@ export class AuctionController {
   }
 
   @Get('/:id')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'If the auction is found',
+    type: SingleAuctionDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'If the auction is not found',
+  })
   public async getAnAuction(
     @Param('id') auctionId: string,
   ): Promise<SingleAuctionDto | null> {
     try {
       const domain = await this.auctionService.findById(auctionId);
 
+      if (!domain) {
+        throw new NotFoundException('Auction not found');
+      }
+
       return domain ? this.mapAuctionDomainToSingleDto(domain) : null;
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
       throw new InternalServerErrorException(error);
     }
   }
