@@ -1,6 +1,6 @@
-import { Currency } from './currency';
+import { Currency } from '../../currency/domain/currency';
 import { ItemCategory } from './item-category';
-import { LocalizedString } from './localized-string';
+import { LocalizedString } from '../../shared/domain/localized-string';
 
 interface ItemProperties {
   id: string;

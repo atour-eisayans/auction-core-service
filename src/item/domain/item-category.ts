@@ -1,4 +1,4 @@
-import { LocalizedString } from './localized-string';
+import { LocalizedString } from '../../shared/domain/localized-string';
 
 interface ItemCategoryProperties {
   id: string;

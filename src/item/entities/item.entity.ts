@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { CurrencyEntity } from '../../currency/entities/currency.entity';
-import { LocalizedString } from '../../domain/localized-string';
+import { LocalizedString } from '../../shared/domain/localized-string';
 import { ItemCategoryEntity } from './item-category.entity';
 
 @Entity({ name: 'item' })

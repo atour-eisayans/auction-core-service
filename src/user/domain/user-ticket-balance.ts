@@ -1,4 +1,4 @@
-import { TicketConfiguration } from './ticket-configuration';
+import { TicketConfiguration } from '../../ticket-configuration/domain/ticket-configuration';
 import { User } from './user';
 
 interface UserTicketBalanceProperties {
