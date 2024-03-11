@@ -42,4 +42,8 @@ export class AuctionService {
       limits: payload.limits,
     });
   }
+
+  public async findById(auctionId: string): Promise<Auction | null> {
+    return await this.auctionRepository.findById(auctionId);
+  }
 }

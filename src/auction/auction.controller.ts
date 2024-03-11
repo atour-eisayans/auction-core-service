@@ -1,13 +1,17 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   InternalServerErrorException,
+  Param,
   Post,
 } from '@nestjs/common';
 import { AuctionCreateDto } from './dto/incoming/auction-create-dto.dto';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuctionService } from './auction.service';
+import { SingleAuctionDto } from './dto/outgoing/single-auction.dto';
+import { Auction } from './domain/auction';
 
 @Controller('auction')
 @ApiTags('auctions')
@@ -27,5 +31,43 @@ export class AuctionController {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
+  }
+
+  @Get('/:id')
+  public async getAnAuction(
+    @Param('id') auctionId: string,
+  ): Promise<SingleAuctionDto | null> {
+    try {
+      const domain = await this.auctionService.findById(auctionId);
+
+      return domain ? this.mapAuctionDomainToSingleDto(domain) : null;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  private mapAuctionDomainToSingleDto(auction: Auction): SingleAuctionDto {
+    return <SingleAuctionDto>{
+      id: auction.id,
+      name: auction.name,
+      state: auction.state,
+      limits: auction.limits,
+      startAt: auction.startAt,
+      endedAt: auction.endedAt,
+      item: {
+        id: auction.item.id,
+        name: auction.item.name,
+        price: auction.item.price,
+        currency: {
+          id: auction.item.currency.id,
+          code: auction.item.currency.code,
+          symbol: auction.item.currency.symbol,
+        },
+        category: {
+          id: auction.item.category.id,
+          name: auction.item.category.name,
+        },
+      },
+    };
   }
 }

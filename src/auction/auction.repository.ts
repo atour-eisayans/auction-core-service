@@ -20,4 +20,19 @@ export class AuctionRepository implements AuctionRepositoryInterface {
 
     return storedAuction.id;
   }
+
+  public async findById(auctionId: string): Promise<Auction | null> {
+    const entity = await this.auctionRepository.findOne({
+      where: {
+        id: auctionId,
+      },
+      relations: ['item', 'item.category', 'item.currency'],
+    });
+
+    if (!entity) {
+      return null;
+    }
+
+    return this.auctionEntityMapper.mapAuctionDbEntityToDomain(entity);
+  }
 }
