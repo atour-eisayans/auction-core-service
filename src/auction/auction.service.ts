@@ -14,6 +14,16 @@ export interface CreateAuctionRequest {
   itemId: string;
 }
 
+export interface FindAllAuctionsFilter {
+  page: number;
+  limit: number;
+}
+
+interface FindAllAuctionsResponse {
+  auctions: Auction[];
+  totalCount: number;
+}
+
 @Injectable()
 export class AuctionService {
   constructor(
@@ -45,5 +55,18 @@ export class AuctionService {
 
   public async findById(auctionId: string): Promise<Auction | null> {
     return await this.auctionRepository.findById(auctionId);
+  }
+
+  public async findAll(
+    filter: FindAllAuctionsFilter,
+  ): Promise<FindAllAuctionsResponse> {
+    const { auctions, totalCount } = await this.auctionRepository.findAll(
+      filter,
+    );
+
+    return {
+      auctions,
+      totalCount,
+    };
   }
 }
