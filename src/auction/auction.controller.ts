@@ -7,14 +7,17 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
-import { AuctionCreateDto } from './dto/incoming/auction-create-dto.dto';
+import { AuctionCreateDto } from './dto/incoming/auction-create.dto';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuctionService } from './auction.service';
 import { SingleAuctionDto } from './dto/outgoing/single-auction.dto';
 import { Auction } from './domain/auction';
+import { AuctionsListFilterDto } from './dto/incoming/auctions-list-filter.dto';
+import { AuctionsListResponseDto } from './dto/outgoing/auctions-list-response.dto';
 
-@Controller('auction')
+@Controller('api/v1/auction')
 @ApiTags('auctions')
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
@@ -87,5 +90,28 @@ export class AuctionController {
         },
       },
     };
+  }
+
+  @Get('/')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: AuctionsListResponseDto,
+  })
+  public async getListOfAuctions(
+    @Query() filter: AuctionsListFilterDto,
+  ): Promise<AuctionsListResponseDto> {
+    try {
+      const { auctions, totalCount } = await this.auctionService.findAll(
+        filter,
+      );
+      return {
+        items: auctions,
+        page: filter.page,
+        limit: filter.limit,
+        totalCount: totalCount,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 }

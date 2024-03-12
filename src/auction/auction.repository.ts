@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { AuctionRepositoryInterface } from './domain/auction.repository.interface';
+import {
+  AuctionRepositoryInterface,
+  AuctionsListFilter,
+  AuctionsListResponse,
+} from './domain/auction.repository.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuctionEntity } from './entities/auction.entity';
 import { Repository } from 'typeorm';
@@ -34,5 +38,24 @@ export class AuctionRepository implements AuctionRepositoryInterface {
     }
 
     return this.auctionEntityMapper.mapAuctionDbEntityToDomain(entity);
+  }
+
+  public async findAll(
+    filter: AuctionsListFilter,
+  ): Promise<AuctionsListResponse> {
+    const offset = (filter.page - 1) * filter.limit;
+
+    const [entities, totalCount] = await this.auctionRepository.findAndCount({
+      skip: offset,
+      take: filter.limit,
+      relations: ['item', 'item.category', 'item.currency'],
+    });
+
+    return {
+      auctions: entities.map((entity) =>
+        this.auctionEntityMapper.mapAuctionDbEntityToDomain(entity),
+      ),
+      totalCount,
+    };
   }
 }
