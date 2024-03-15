@@ -11,14 +11,14 @@ export class UserEntity {
   @PrimaryColumn({ type: 'varchar' })
   id!: string;
 
-  @Column({ type: 'varchar', name: 'first_name' })
-  firstName!: string;
+  @Column({ type: 'varchar', name: 'first_name', nullable: true })
+  firstName?: string;
 
-  @Column({ type: 'varchar', name: 'last_name' })
-  lastName!: string;
+  @Column({ type: 'varchar', name: 'last_name', nullable: true })
+  lastName?: string;
 
-  @Column({ type: 'varchar', name: 'avatar' })
-  avatar!: string;
+  @Column({ type: 'varchar', name: 'avatar', nullable: true })
+  avatar?: string;
 
   @Column({ type: 'varchar', name: 'username' })
   username!: string;

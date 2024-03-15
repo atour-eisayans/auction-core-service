@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
+import { TicketConfigurationEntity } from '../../ticket-configuration/entites/ticket-configuration.entity';
 
 @Entity({ name: 'user_ticket_balance' })
 export class UserTicketBalanceEntity {
@@ -20,6 +21,10 @@ export class UserTicketBalanceEntity {
 
   @Column({ type: 'double precision', name: 'balance' })
   balance!: number;
+
+  @ManyToOne(() => TicketConfigurationEntity, { nullable: false })
+  @JoinColumn({ name: 'ticket_type', referencedColumnName: 'id' })
+  ticketType!: TicketConfigurationEntity;
 
   @CreateDateColumn({ type: 'timestamp with time zone', name: 'created_at' })
   createdAt!: Date;
