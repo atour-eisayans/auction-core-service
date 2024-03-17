@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { ValidationErrorMessage } from '../../../shared/validation/validation-error-message';
 
 export class GetUserTicketBalanceDto {
@@ -9,5 +9,6 @@ export class GetUserTicketBalanceDto {
     required: true,
   })
   @IsString({ message: ValidationErrorMessage.MustBeString })
+  @IsNotEmpty({ message: ValidationErrorMessage.MustBeFilled })
   ticketTypeId!: string;
 }
