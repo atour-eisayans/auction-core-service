@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { AuctionModule } from './auction/auction.module';
 import { UserModule } from './user/user.module';
+import { BidModule } from './bid/bid.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { UserModule } from './user/user.module';
     DatabaseModule,
     AuctionModule,
     UserModule,
+    BidModule,
   ],
   controllers: [],
   providers: [],

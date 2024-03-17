@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -11,6 +12,7 @@ import {
 } from 'typeorm';
 
 @Entity({ name: 'bid' })
+@Index(['auction', 'user'], { unique: true })
 export class BidEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
