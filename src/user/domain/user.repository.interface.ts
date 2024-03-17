@@ -5,4 +5,9 @@ export interface UserRepositoryInterface {
     userId: string,
     ticketTypeId: string,
   ) => UserTicketBalance | null | Promise<UserTicketBalance | null>;
+  increaseUserTicketBalance: (
+    userId: string,
+    ticketTypeId: string,
+    quantity: number,
+  ) => number | null | Promise<number | null>;
 }

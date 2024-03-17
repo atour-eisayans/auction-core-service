@@ -43,4 +43,39 @@ export class UserRepository implements UserRepositoryInterface {
       throw error;
     }
   }
+
+  public async increaseUserTicketBalance(
+    userId: string,
+    ticketTypeId: string,
+    quantity: number,
+  ): Promise<number | null> {
+    try {
+      const entity = await this.userBalanceRepository.findOneOrFail({
+        where: {
+          user: {
+            id: userId,
+          },
+          ticketType: {
+            id: ticketTypeId,
+          },
+        },
+        relations: ['user', 'ticketType'],
+      });
+
+      const newBalance = entity.balance + quantity;
+
+      await this.userBalanceRepository.save({
+        id: entity.id,
+        balance: newBalance,
+      });
+
+      return newBalance;
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        return null;
+      }
+
+      throw error;
+    }
+  }
 }

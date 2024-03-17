@@ -15,4 +15,16 @@ export class UserService {
   ): Promise<UserTicketBalance> {
     return await this.userRepository.getUserTicketBalance(userId, ticketTypeId);
   }
+
+  public async increaseUserTicketBalance(
+    userId: string,
+    ticketTypeId: string,
+    quantity: number,
+  ): Promise<number> {
+    return await this.userRepository.increaseUserTicketBalance(
+      userId,
+      ticketTypeId,
+      quantity,
+    );
+  }
 }
