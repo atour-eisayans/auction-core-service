@@ -7,6 +7,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { AuctionCreateDto } from './dto/incoming/auction-create.dto';
@@ -110,6 +111,21 @@ export class AuctionController {
         limit: filter.limit,
         totalCount: totalCount,
       };
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  @Put('/:id')
+  @ApiResponse({
+    status: HttpStatus.OK,
+  })
+  public async auctionUpdate(
+    @Body() body: AuctionCreateDto,
+    @Param() auctionId: string,
+  ): Promise<string> {
+    try {
+      return await this.auctionService.update(body, auctionId);
     } catch (error) {
       throw new InternalServerErrorException(error);
     }

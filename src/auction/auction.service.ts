@@ -24,6 +24,8 @@ interface FindAllAuctionsResponse {
   totalCount: number;
 }
 
+export type UpdateAuctionRequest = Partial<CreateAuctionRequest>;
+
 @Injectable()
 export class AuctionService {
   constructor(
@@ -35,6 +37,20 @@ export class AuctionService {
     const auction = this.mapCreateAuctionRequestToDomain(request);
 
     const storedAuctionId = await this.auctionRepository.save(auction);
+
+    return storedAuctionId;
+  }
+
+  public async update(body: UpdateAuctionRequest, id: string): Promise<string | null> {
+    const auction = await this.findById(id);
+
+    if (!auction) {
+      return null;
+    }
+
+    const updatedData = Object.assign(auction, body, { id });
+
+    const storedAuctionId = await this.auctionRepository.save(updatedData);
 
     return storedAuctionId;
   }
