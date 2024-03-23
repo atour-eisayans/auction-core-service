@@ -119,12 +119,12 @@ export class AuctionController {
 
   @Put('/:id')
   @ApiResponse({
-    status: HttpStatus.OK,
+    status: HttpStatus.NO_CONTENT
   })
   public async auctionUpdate(
     @Body() body: AuctionUpdateDto,
     @Param() auctionId: string,
-  ): Promise<string> {
+  ): Promise<void> {
     try {
       return await this.auctionService.update(body, auctionId);
     } catch (error) {

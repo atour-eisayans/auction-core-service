@@ -41,18 +41,14 @@ export class AuctionService {
     return storedAuctionId;
   }
 
-  public async update(body: UpdateAuctionRequest, id: string): Promise<string | null> {
+  public async update(body: UpdateAuctionRequest, id: string): Promise<void> {
     const auction = await this.findById(id);
 
     if (!auction) {
       return null;
     }
 
-    const updatedData = Object.assign(auction, body, { id });
-
-    const storedAuctionId = await this.auctionRepository.save(updatedData);
-
-    return storedAuctionId;
+    await this.auctionRepository.save({ ...auction, ...body });
   }
 
   private mapCreateAuctionRequestToDomain(
