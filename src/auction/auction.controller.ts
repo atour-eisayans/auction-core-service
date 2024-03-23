@@ -119,6 +119,9 @@ export class AuctionController {
   }
 
   @Put('/:id')
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT
+  })
   @HttpCode(HttpStatus.NO_CONTENT)
   public async auctionUpdate(
     @Body() body: AuctionUpdateDto,
