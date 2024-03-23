@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { AuctionCreateDto } from './dto/incoming/auction-create.dto';
@@ -16,6 +18,7 @@ import { SingleAuctionDto } from './dto/outgoing/single-auction.dto';
 import { Auction } from './domain/auction';
 import { AuctionsListFilterDto } from './dto/incoming/auctions-list-filter.dto';
 import { AuctionsListResponseDto } from './dto/outgoing/auctions-list-response.dto';
+import { AuctionUpdateDto } from './dto/incoming/auction-update.dto';
 
 @Controller('api/v1/auction')
 @ApiTags('auctions')
@@ -110,6 +113,22 @@ export class AuctionController {
         limit: filter.limit,
         totalCount: totalCount,
       };
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  @Put('/:id')
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT
+  })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async auctionUpdate(
+    @Body() body: AuctionUpdateDto,
+    @Param() auctionId: string,
+  ): Promise<void> {
+    try {
+      return await this.auctionService.update(body, auctionId);
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
