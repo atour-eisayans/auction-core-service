@@ -17,6 +17,7 @@ import { SingleAuctionDto } from './dto/outgoing/single-auction.dto';
 import { Auction } from './domain/auction';
 import { AuctionsListFilterDto } from './dto/incoming/auctions-list-filter.dto';
 import { AuctionsListResponseDto } from './dto/outgoing/auctions-list-response.dto';
+import { AuctionUpdateDto } from './dto/incoming/auction-update.dto';
 
 @Controller('api/v1/auction')
 @ApiTags('auctions')
@@ -121,7 +122,7 @@ export class AuctionController {
     status: HttpStatus.OK,
   })
   public async auctionUpdate(
-    @Body() body: AuctionCreateDto,
+    @Body() body: AuctionUpdateDto,
     @Param() auctionId: string,
   ): Promise<string> {
     try {
