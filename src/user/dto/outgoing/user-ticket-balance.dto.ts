@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TicketConfigurationDto } from 'src/ticket-configuration/dto/outgoing/ticket-configuration.dto';
+import { TicketConfigurationDto } from '../../../ticket-configuration/dto/outgoing/ticket-configuration.dto';
 
 export class UserTicketBalanceDto {
   @ApiProperty({

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SingleCurrencyDto } from 'src/currency/dto/outgoing/single-currency.dto';
+import { SingleCurrencyDto } from '../../../currency/dto/outgoing/single-currency.dto';
 
 export class TicketConfigurationDto {
   @ApiProperty({

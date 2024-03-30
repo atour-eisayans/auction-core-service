@@ -18,6 +18,6 @@ import { UserService } from './user.service';
       useClass: UserRepository,
     },
   ],
-  exports: [UserService, 'UserRepositoryInterface'],
+  exports: [UserService, 'UserRepositoryInterface', UserEntityMapper],
 })
 export class UserModule {}

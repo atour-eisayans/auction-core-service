@@ -16,4 +16,12 @@ export interface AuctionRepositoryInterface {
   findAll: (
     filter: AuctionsListFilter,
   ) => AuctionsListResponse | Promise<AuctionsListResponse>;
+  updateAuctionWinner: (
+    auctionId: string,
+    winnerId: string,
+  ) => void | Promise<void>;
+  updateAuctionResult: (
+    auctionId: string,
+    finishedAt: Date,
+  ) => void | Promise<void>;
 }

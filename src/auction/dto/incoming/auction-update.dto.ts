@@ -1,21 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
-import { AuctionLimit } from 'src/auction/domain/auction';
-import { AuctionState } from 'src/shared/enum/auction-state.enum';
-import { Locale } from 'src/shared/enum/locale.enum';
-import { ObjectIsAuctionRules } from 'src/shared/validation/decorators/auction-limits-object.decorator';
-import { ObjectIsLocalizedString } from 'src/shared/validation/decorators/localized-string.decorator';
-import { ValidationErrorMessage } from 'src/shared/validation/validation-error-message';
+import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import { AuctionLimit } from '../../../auction/domain/auction';
+import { AuctionState } from '../../../shared/enum/auction-state.enum';
+import { Locale } from '../../../shared/enum/locale.enum';
+import { ObjectIsAuctionRules } from '../../../shared/validation/decorators/auction-limits-object.decorator';
+import { ObjectIsLocalizedString } from '../../../shared/validation/decorators/localized-string.decorator';
+import { ValidationErrorMessage } from '../../../shared/validation/validation-error-message';
 import { UpdateAuctionRequest } from '../../auction.service';
 
 export class AuctionUpdateDto implements UpdateAuctionRequest {
-//   @ApiProperty({
-//     description: 'Id of the auction',
-//   })
-//   @IsOptional()
-//   @IsUUID()
-//   id?: string;
-
   @ApiProperty({
     description: 'Name of the auction',
   })

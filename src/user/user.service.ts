@@ -27,4 +27,16 @@ export class UserService {
       quantity,
     );
   }
+
+  public async decreaseUserTicketBalance(
+    userId: string,
+    ticketTypeId: string,
+    quantity: number,
+  ): Promise<number> {
+    return await this.userRepository.decreaseUserTicketBalance(
+      userId,
+      ticketTypeId,
+      quantity,
+    );
+  }
 }

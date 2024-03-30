@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SingleCurrencyDto } from '../../../currency/dto/outgoing/single-currency.dto';
 import { LocalizedString } from '../../../shared/domain/localized-string';
+import { TicketConfigurationDto } from '../../../ticket-configuration/dto/outgoing/ticket-configuration.dto';
 import { SingleItemCategoryDto } from './single-item-category.dto';
 
 export class SingleItemDto {
@@ -24,9 +24,9 @@ export class SingleItemDto {
 
   @ApiProperty({
     description: 'Currency of the item',
-    type: SingleCurrencyDto,
+    type: TicketConfigurationDto,
   })
-  currency: SingleCurrencyDto;
+  ticketConfiguration: TicketConfigurationDto;
 
   @ApiProperty({
     description: 'Category of the item',

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { TicketConfigurationEntity } from '../ticket-configuration/entites/ticket-configuration.entity';
 import { Item } from './domain/item';
+import { ItemCategoryEntity } from './entities/item-category.entity';
 import { ItemEntity } from './entities/item.entity';
 
 @Injectable()
@@ -12,8 +14,13 @@ export class ItemEntityMapper {
       category: {
         id: domain.category.id,
         name: domain.category.name,
-      },
-      currency: domain.currency,
+      } as ItemCategoryEntity,
+      ticketConfiguration: {
+        id: domain.ticketConfiguration.id,
+        currency: domain.ticketConfiguration.currency,
+        raisingAmount: domain.ticketConfiguration.raisingAmount,
+        unitPrice: domain.ticketConfiguration.unitPrice,
+      } as TicketConfigurationEntity,
     };
   }
 }

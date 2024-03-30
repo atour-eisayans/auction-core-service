@@ -7,8 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { CurrencyEntity } from '../../currency/entities/currency.entity';
 import { LocalizedString } from '../../shared/domain/localized-string';
+import { TicketConfigurationEntity } from '../../ticket-configuration/entites/ticket-configuration.entity';
 import { ItemCategoryEntity } from './item-category.entity';
 
 @Entity({ name: 'item' })
@@ -22,9 +22,9 @@ export class ItemEntity {
   @Column({ type: 'double precision', name: 'price' })
   price!: number;
 
-  @ManyToOne(() => CurrencyEntity, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'currency_id', referencedColumnName: 'id' })
-  currency!: CurrencyEntity;
+  @ManyToOne(() => TicketConfigurationEntity, { onDelete: 'NO ACTION' })
+  @JoinColumn({ name: 'ticket_configuration_id', referencedColumnName: 'id' })
+  ticketConfiguration!: TicketConfigurationEntity;
 
   @ManyToOne(() => ItemCategoryEntity, { nullable: false })
   @JoinColumn({ name: 'category_id', referencedColumnName: 'id' })

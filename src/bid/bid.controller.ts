@@ -20,7 +20,7 @@ export class BidController {
   })
   public async place(@Body() payload: PlaceBidDto): Promise<number> {
     try {
-      return await this.bidService.place(payload.auctionId, payload.userId);
+      return await this.bidService.placeBid(payload.auctionId, payload.userId);
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
