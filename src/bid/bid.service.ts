@@ -4,6 +4,8 @@ import { AuctionRepositoryInterface } from '../auction/domain/auction.repository
 import { User } from '../user/domain/user';
 import { UserRepositoryInterface } from '../user/domain/user.repository.interface';
 import { BidRepositoryInterface } from './domain/bid.repository.interface';
+import { AutomatedBid } from './domain/automated-bid';
+import { BidPlacedEvent } from './events/bid-placed.event';
 
 @Injectable()
 export class BidService {
@@ -36,7 +38,10 @@ export class BidService {
 
     const totalBids = await this.bidRepository.placeBid(auctionId, userId);
 
-    this.eventEmitter.emit('bid.placed');
+    this.eventEmitter.emit(
+      'bid.placed',
+      new BidPlacedEvent({ auctionId, userId }),
+    );
 
     return totalBids;
   }
@@ -66,5 +71,15 @@ export class BidService {
     }
 
     return null;
+  }
+
+  public async readAllAutomatedBids(
+    auctionId: string,
+  ): Promise<AutomatedBid[]> {
+    return await this.bidRepository.findAllAutomatedBids(auctionId);
+  }
+
+  public async removeAllDeprecatedBids(auctionId: string): Promise<void> {
+    await this.bidRepository.removeAutomatedBids(auctionId);
   }
 }

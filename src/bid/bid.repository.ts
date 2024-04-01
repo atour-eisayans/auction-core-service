@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { BidRepositoryInterface } from './domain/bid.repository.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BidEntity } from './entities/bid.entity';
 import { MoreThan, Not, Raw, Repository } from 'typeorm';
-import { AutomatedBidEntity } from './entities/automated_bid.entity';
-import { AutomatedBid } from './domain/automated-bid';
 import { BidEntityMapper } from './bid.entity.mapper';
+import { AutomatedBid } from './domain/automated-bid';
+import { BidRepositoryInterface } from './domain/bid.repository.interface';
+import { AutomatedBidEntity } from './entities/automated_bid.entity';
+import { BidEntity } from './entities/bid.entity';
 
 interface UpsertBidResponse {
   total_bids: number;
@@ -101,5 +101,33 @@ export class BidRepository implements BidRepositoryInterface {
         lastBidder: false,
       },
     );
+  }
+
+  public async findAllAutomatedBids(
+    auctionId: string,
+  ): Promise<AutomatedBid[]> {
+    const entities = await this.automatedBidRepository.find({
+      where: {
+        auction: { id: auctionId },
+        ticketCount: MoreThan(0),
+      },
+      relations: {
+        auction: {
+          item: {
+            ticketConfiguration: true,
+          },
+        },
+      },
+    });
+
+    return entities.map((entity) =>
+      this.bidEntityMapper.mapAutomatedBidEntityToDomain(entity),
+    );
+  }
+
+  public async removeAutomatedBids(auctionId: string): Promise<void> {
+    await this.automatedBidRepository.delete({
+      auction: { id: auctionId },
+    });
   }
 }

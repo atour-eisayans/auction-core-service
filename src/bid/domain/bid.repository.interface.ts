@@ -7,9 +7,13 @@ export interface BidRepositoryInterface {
     auctionId: string,
     currentBidderId?: string,
   ) => AutomatedBid | null | Promise<AutomatedBid | null>;
+  findAllAutomatedBids: (
+    auctionId: string,
+  ) => AutomatedBid[] | Promise<AutomatedBid[]>;
   decreaseUserFreezedTicketCount: (
     auctionId: string,
     userId: string,
   ) => void | Promise<void>;
   setLastBidderFlagFalse: (auctionId: string) => void | Promise<void>;
+  removeAutomatedBids: (auctionId: string) => void | Promise<void>;
 }

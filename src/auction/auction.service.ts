@@ -161,7 +161,7 @@ export class AuctionService {
   }
 
   public async processAuctionTick(auctionId: string): Promise<void> {
-    const timeout = 10;
+    const timeout = 20;
 
     await this.taskService.scheduleTask(
       TaskType.CheckAutomatedBid,
