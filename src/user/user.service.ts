@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UserRepositoryInterface } from './domain/user.repository.interface';
 import { UserTicketBalance } from './domain/user-ticket-balance';
+import { PersistencyOptions } from '../shared/domain/persistency-options.interface';
 
 @Injectable()
 export class UserService {
@@ -12,19 +13,26 @@ export class UserService {
   public async getUserTicketBalance(
     userId: string,
     ticketTypeId: string,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<UserTicketBalance> {
-    return await this.userRepository.getUserTicketBalance(userId, ticketTypeId);
+    return await this.userRepository.getUserTicketBalance(
+      userId,
+      ticketTypeId,
+      persistencyOptions,
+    );
   }
 
   public async increaseUserTicketBalance(
     userId: string,
     ticketTypeId: string,
     quantity: number,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<number> {
     return await this.userRepository.increaseUserTicketBalance(
       userId,
       ticketTypeId,
       quantity,
+      persistencyOptions,
     );
   }
 
@@ -32,11 +40,13 @@ export class UserService {
     userId: string,
     ticketTypeId: string,
     quantity: number,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<number> {
     return await this.userRepository.decreaseUserTicketBalance(
       userId,
       ticketTypeId,
       quantity,
+      persistencyOptions,
     );
   }
 }

@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Not, Raw, Repository } from 'typeorm';
+import { PersistencyOptions } from '../shared/domain/persistency-options.interface';
+import { TransactionManagerInterface } from '../shared/domain/transaction-manager.interface';
 import { BidEntityMapper } from './bid.entity.mapper';
 import { AutomatedBid } from './domain/automated-bid';
 import { BidRepositoryInterface } from './domain/bid.repository.interface';
@@ -19,9 +21,36 @@ export class BidRepository implements BidRepositoryInterface {
     @InjectRepository(AutomatedBidEntity)
     private readonly automatedBidRepository: Repository<AutomatedBidEntity>,
     private readonly bidEntityMapper: BidEntityMapper,
+    @Inject('TransactionManager')
+    private readonly transactionManager: TransactionManagerInterface,
   ) {}
 
-  public async placeBid(auctionId: string, userId: string): Promise<number> {
+  private getBidRepository(persistency?: PersistencyOptions) {
+    const transactionName = persistency?.transactionName;
+
+    return transactionName
+      ? this.transactionManager
+          .getManager(transactionName)
+          ?.getRepository(BidEntity) ?? this.bidRepository
+      : this.bidRepository;
+  }
+
+  private getAutomatedBidRepository(persistency?: PersistencyOptions) {
+    const transactionName = persistency?.transactionName;
+    return transactionName
+      ? this.transactionManager
+          .getManager(transactionName)
+          ?.getRepository(AutomatedBidEntity) ?? this.automatedBidRepository
+      : this.automatedBidRepository;
+  }
+
+  public async placeBid(
+    auctionId: string,
+    userId: string,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<number> {
+    const bidRepository = this.getBidRepository(persistencyOptions);
+
     const query = `
       INSERT INTO "bid"
       ("auction_id", "user_id")
@@ -32,7 +61,7 @@ export class BidRepository implements BidRepositoryInterface {
       SET "total_bids" = "bid"."total_bids" + 1
       RETURNING "total_bids"
     `;
-    const result: UpsertBidResponse[] = await this.bidRepository.query(query, [
+    const result: UpsertBidResponse[] = await bidRepository.query(query, [
       auctionId,
       userId,
     ]);
@@ -47,8 +76,12 @@ export class BidRepository implements BidRepositoryInterface {
   public async findNextAutomatedBid(
     auctionId: string,
     currentBidderId?: string,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<AutomatedBid | null> {
-    const entity = await this.automatedBidRepository.findOne({
+    const automatedBidRepository =
+      this.getAutomatedBidRepository(persistencyOptions);
+
+    const entity = await automatedBidRepository.findOne({
       where: {
         auction: {
           id: auctionId,
@@ -78,8 +111,12 @@ export class BidRepository implements BidRepositoryInterface {
   public async decreaseUserFreezedTicketCount(
     auctionId: string,
     userId: string,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<void> {
-    await this.automatedBidRepository.update(
+    const automatedBidRepository =
+      this.getAutomatedBidRepository(persistencyOptions);
+
+    await automatedBidRepository.update(
       {
         auction: { id: auctionId },
         user: { id: userId },
@@ -92,8 +129,14 @@ export class BidRepository implements BidRepositoryInterface {
     );
   }
 
-  public async setLastBidderFlagFalse(auctionId: string): Promise<void> {
-    await this.automatedBidRepository.update(
+  public async setLastBidderFlagFalse(
+    auctionId: string,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<void> {
+    const automatedBidRepository =
+      this.getAutomatedBidRepository(persistencyOptions);
+
+    await automatedBidRepository.update(
       {
         auction: { id: auctionId },
       },
@@ -105,8 +148,12 @@ export class BidRepository implements BidRepositoryInterface {
 
   public async findAllAutomatedBids(
     auctionId: string,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<AutomatedBid[]> {
-    const entities = await this.automatedBidRepository.find({
+    const automatedBidRepository =
+      this.getAutomatedBidRepository(persistencyOptions);
+
+    const entities = await automatedBidRepository.find({
       where: {
         auction: { id: auctionId },
         ticketCount: MoreThan(0),
@@ -125,8 +172,14 @@ export class BidRepository implements BidRepositoryInterface {
     );
   }
 
-  public async removeAutomatedBids(auctionId: string): Promise<void> {
-    await this.automatedBidRepository.delete({
+  public async removeAutomatedBids(
+    auctionId: string,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<void> {
+    const automatedBidRepository =
+      this.getAutomatedBidRepository(persistencyOptions);
+
+    await automatedBidRepository.delete({
       auction: { id: auctionId },
     });
   }

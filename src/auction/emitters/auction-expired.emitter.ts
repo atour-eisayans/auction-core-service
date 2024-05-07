@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { TransactionManagerInterface } from '../../shared/domain/transaction-manager.interface';
 import { AuctionState } from '../../shared/enum/auction-state.enum';
 import { TaskType } from '../../shared/enum/task-type.enum';
 import taskNameGenerator from '../../shared/helper/task-name-generator';
@@ -12,6 +13,8 @@ export class AuctionExpiredEmitter {
   constructor(
     private readonly taskService: TaskService,
     private readonly auctionService: AuctionService,
+    @Inject('TransactionManager')
+    private readonly transactionManager: TransactionManagerInterface,
   ) {}
 
   private async deleteTask(
@@ -25,14 +28,27 @@ export class AuctionExpiredEmitter {
   @OnEvent('auction.expired')
   public async handleAuctionExpiredEvent(payload: AuctionExpiredEvent) {
     const { auctionId } = payload;
+    const transactionName = `auction_expired_${auctionId}_${Date.now()}`;
 
-    await this.deleteTask(auctionId, TaskType.AuctionExpire);
-    await this.deleteTask(auctionId, TaskType.CheckAutomatedBid);
+    await this.transactionManager.runInTransaction(
+      transactionName,
+      'REPEATABLE READ',
+      async () => {
+        await this.deleteTask(auctionId, TaskType.AuctionExpire);
+        await this.deleteTask(auctionId, TaskType.CheckAutomatedBid);
 
-    await this.auctionService.updateAuction(auctionId, {
-      state: AuctionState.Expired,
-    });
+        await this.auctionService.updateAuction(
+          auctionId,
+          {
+            state: AuctionState.Expired,
+          },
+          { transactionName },
+        );
 
-    await this.auctionService.updateAuctionResult(auctionId, new Date());
+        await this.auctionService.updateAuctionResult(auctionId, new Date(), {
+          transactionName,
+        });
+      },
+    );
   }
 }

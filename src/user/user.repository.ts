@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityNotFoundError, MoreThanOrEqual, Repository } from 'typeorm';
+import { PersistencyOptions } from '../shared/domain/persistency-options.interface';
+import { TransactionManagerInterface } from '../shared/domain/transaction-manager.interface';
 import { UserTicketBalance } from './domain/user-ticket-balance';
 import { UserRepositoryInterface } from './domain/user.repository.interface';
 import { UserTicketBalanceEntity } from './entities/user-ticket-balance.entity';
@@ -15,14 +17,38 @@ export class UserRepository implements UserRepositoryInterface {
     @InjectRepository(UserTicketBalanceEntity)
     private readonly userBalanceRepository: Repository<UserTicketBalanceEntity>,
     private readonly userEntityMapper: UserEntityMapper,
+    @Inject('TransactionManager')
+    private readonly transactionManager: TransactionManagerInterface,
   ) {}
+
+  private getUserRepository(persistency?: PersistencyOptions) {
+    const transactionName = persistency?.transactionName;
+    return transactionName
+      ? this.transactionManager
+          .getManager(transactionName)
+          ?.getRepository(UserEntity) ?? this.userRepository
+      : this.userRepository;
+  }
+
+  private getUserBalanceRepository(persistency?: PersistencyOptions) {
+    const transactionName = persistency?.transactionName;
+    return transactionName
+      ? this.transactionManager
+          .getManager(transactionName)
+          ?.getRepository(UserTicketBalanceEntity) ?? this.userBalanceRepository
+      : this.userBalanceRepository;
+  }
 
   public async getUserTicketBalance(
     userId: string,
     ticketTypeId: string,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<UserTicketBalance | null> {
     try {
-      const entity = await this.userBalanceRepository.findOneOrFail({
+      const userBalanceRepository =
+        this.getUserBalanceRepository(persistencyOptions);
+
+      const entity = await userBalanceRepository.findOneOrFail({
         where: {
           user: {
             id: userId,
@@ -48,9 +74,13 @@ export class UserRepository implements UserRepositoryInterface {
     userId: string,
     ticketTypeId: string,
     quantity: number,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<number | null> {
     try {
-      const entity = await this.userBalanceRepository.findOneOrFail({
+      const userBalanceRepository =
+        this.getUserBalanceRepository(persistencyOptions);
+
+      const entity = await userBalanceRepository.findOneOrFail({
         where: {
           user: {
             id: userId,
@@ -64,7 +94,7 @@ export class UserRepository implements UserRepositoryInterface {
 
       const newBalance = entity.balance + quantity;
 
-      await this.userBalanceRepository.save({
+      await userBalanceRepository.save({
         id: entity.id,
         balance: newBalance,
       });
@@ -83,9 +113,13 @@ export class UserRepository implements UserRepositoryInterface {
     userId: string,
     ticketTypeId: string,
     quantity: number,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<number | null> {
     try {
-      const entity = await this.userBalanceRepository.findOneOrFail({
+      const userBalanceRepository =
+        this.getUserBalanceRepository(persistencyOptions);
+
+      const entity = await userBalanceRepository.findOneOrFail({
         where: {
           user: {
             id: userId,
@@ -100,7 +134,7 @@ export class UserRepository implements UserRepositoryInterface {
 
       const newBalance = entity.balance - quantity;
 
-      await this.userBalanceRepository.save({
+      await userBalanceRepository.save({
         id: entity.id,
         balance: newBalance,
       });

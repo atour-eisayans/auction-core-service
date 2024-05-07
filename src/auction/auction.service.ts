@@ -19,6 +19,7 @@ import { TaskType } from '../shared/enum/task-type.enum';
 import { TaskService } from '../task/task.service';
 import { Auction, AuctionLimit } from './domain/auction';
 import { AuctionRepositoryInterface } from './domain/auction.repository.interface';
+import { PersistencyOptions } from '../shared/domain/persistency-options.interface';
 
 export interface CreateAuctionRequest {
   name: LocalizedString;
@@ -55,10 +56,16 @@ export class AuctionService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  public async createAuction(request: CreateAuctionRequest): Promise<string> {
+  public async createAuction(
+    request: CreateAuctionRequest,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<string> {
     const auction = this.mapCreateAuctionRequestToDomain(request);
 
-    const storedAuctionId = await this.auctionRepository.save(auction);
+    const storedAuctionId = await this.auctionRepository.save(
+      auction,
+      persistencyOptions,
+    );
 
     return storedAuctionId;
   }
@@ -66,18 +73,23 @@ export class AuctionService {
   public async updateAuction(
     id: string,
     body: UpdateAuctionRequest,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<void> {
-    const auction = await this.findById(id);
+    const auction = await this.findById(id, persistencyOptions);
 
     if (!auction) {
       return null;
     }
 
-    await this.auctionRepository.save({ ...auction, ...body });
+    await this.auctionRepository.save(
+      { ...auction, ...body },
+      persistencyOptions,
+    );
   }
 
   private mapCreateAuctionRequestToDomain(
     payload: CreateAuctionRequest,
+    persistencyOptions?: PersistencyOptions,
   ): Auction {
     const item = <Item>{ id: payload.itemId };
     return new Auction({
@@ -90,15 +102,20 @@ export class AuctionService {
     });
   }
 
-  public async findById(auctionId: string): Promise<Auction | null> {
-    return await this.auctionRepository.findById(auctionId);
+  public async findById(
+    auctionId: string,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<Auction | null> {
+    return await this.auctionRepository.findById(auctionId, persistencyOptions);
   }
 
   public async findAll(
     filter: FindAllAuctionsFilter,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<FindAllAuctionsResponse> {
     const { auctions, totalCount } = await this.auctionRepository.findAll(
       filter,
+      persistencyOptions,
     );
 
     return {
@@ -109,8 +126,12 @@ export class AuctionService {
 
   public async updateAuctionPriceBasedOnBid(
     auctionId: string,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<number> {
-    const auction = await this.auctionRepository.findById(auctionId);
+    const auction = await this.auctionRepository.findById(
+      auctionId,
+      persistencyOptions,
+    );
 
     if (!auction) {
       throw new NotFoundException('Auction not found');
@@ -138,10 +159,13 @@ export class AuctionService {
       maxPriceThreshold,
     );
 
-    await this.auctionRepository.save({
-      ...auction,
-      currentPrice: auctionNewPrice,
-    });
+    await this.auctionRepository.save(
+      {
+        ...auction,
+        currentPrice: auctionNewPrice,
+      },
+      persistencyOptions,
+    );
 
     return auctionNewPrice;
   }
@@ -149,18 +173,29 @@ export class AuctionService {
   public async updateAuctionWinner(
     auctionId: string,
     userId: string,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<void> {
-    await this.auctionRepository.updateAuctionWinner(auctionId, userId);
+    await this.auctionRepository.updateAuctionWinner(
+      auctionId,
+      userId,
+      persistencyOptions,
+    );
   }
 
-  public async startAuction(auctionId: string): Promise<void> {
+  public async startAuction(
+    auctionId: string,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<void> {
     this.eventEmitter.emit(
       'auction.started',
       new AuctionStartedEvent({ auctionId }),
     );
   }
 
-  public async processAuctionTick(auctionId: string): Promise<void> {
+  public async processAuctionTick(
+    auctionId: string,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<void> {
     const timeout = 20;
 
     await this.taskService.scheduleTask(
@@ -188,15 +223,24 @@ export class AuctionService {
   public async updateAuctionResult(
     auctionId: string,
     finishedAt: Date,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<void> {
-    await this.auctionRepository.updateAuctionResult(auctionId, finishedAt);
+    await this.auctionRepository.updateAuctionResult(
+      auctionId,
+      finishedAt,
+      persistencyOptions,
+    );
   }
 
   public async processPlacedBid(
     auctionId: string,
     userId: string,
+    persistencyOptions?: PersistencyOptions,
   ): Promise<void> {
-    const auction = await this.auctionRepository.findById(auctionId);
+    const auction = await this.auctionRepository.findById(
+      auctionId,
+      persistencyOptions,
+    );
 
     if (!auction) {
       throw new NotFoundException('Auction not found');
@@ -210,6 +254,7 @@ export class AuctionService {
       userId,
       ticketConfiguration.id,
       1,
+      persistencyOptions,
     );
 
     if (userBalance === null) {

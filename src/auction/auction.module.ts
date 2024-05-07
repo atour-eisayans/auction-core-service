@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BidModule } from '../bid/bid.module';
+import { DatabaseModule } from '../database/database.module';
 import { TaskModule } from '../task/task.module';
 import { UserModule } from '../user/user.module';
 import { AuctionController } from './auction.controller';
@@ -15,6 +16,7 @@ import { AuctionEntity } from './entities/auction.entity';
 
 @Module({
   imports: [
+    DatabaseModule,
     TypeOrmModule.forFeature([AuctionEntity, AuctionResultEntity]),
     TaskModule,
     forwardRef(() => BidModule),

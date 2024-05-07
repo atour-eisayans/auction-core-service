@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { PersistencyOptions } from '../../shared/domain/persistency-options.interface';
+import { TransactionManagerInterface } from '../../shared/domain/transaction-manager.interface';
 import { AuctionState } from '../../shared/enum/auction-state.enum';
 import { TaskType } from '../../shared/enum/task-type.enum';
 import { TaskService } from '../../task/task.service';
@@ -15,6 +17,8 @@ export class AuctionStartedEmitter {
     private readonly taskService: TaskService,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    @Inject('TransactionManager')
+    private readonly transactionManager: TransactionManagerInterface,
   ) {}
 
   private async scheduleExpireAuctionTask(auctionId: string): Promise<string> {
@@ -34,8 +38,14 @@ export class AuctionStartedEmitter {
     );
   }
 
-  private async calculateInitialPrice(auctionId: string): Promise<number> {
-    const auction = await this.auctionService.findById(auctionId);
+  private async calculateInitialPrice(
+    auctionId: string,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<number> {
+    const auction = await this.auctionService.findById(
+      auctionId,
+      persistencyOptions,
+    );
 
     const {
       item: { price: itemOriginalPrice },
@@ -54,17 +64,32 @@ export class AuctionStartedEmitter {
   @OnEvent('auction.started')
   public async handleAuctionStartedEvent(payload: AuctionStartedEvent) {
     const { auctionId } = payload;
+    const transactionName = `auction_started_${auctionId}_${Date.now()}`;
 
-    await this.scheduleExpireAuctionTask(auctionId);
+    await this.transactionManager.runInTransaction(
+      transactionName,
+      'REPEATABLE READ',
+      async () => {
+        await this.scheduleExpireAuctionTask(auctionId);
 
-    const initialPrice = await this.calculateInitialPrice(auctionId);
+        const initialPrice = await this.calculateInitialPrice(auctionId, {
+          transactionName,
+        });
 
-    await this.auctionService.updateAuction(auctionId, {
-      startAt: new Date(),
-      state: AuctionState.Active,
-      currentPrice: initialPrice,
-    });
+        await this.auctionService.updateAuction(
+          auctionId,
+          {
+            startAt: new Date(),
+            state: AuctionState.Active,
+            currentPrice: initialPrice,
+          },
+          { transactionName },
+        );
 
-    await this.auctionService.processAuctionTick(auctionId);
+        await this.auctionService.processAuctionTick(auctionId, {
+          transactionName,
+        });
+      },
+    );
   }
 }

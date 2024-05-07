@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { AuctionService } from '../../auction/auction.service';
+import { AuctionFinishedEvent } from '../../auction/events/auction-finished.event';
+import { TransactionManagerInterface } from '../../shared/domain/transaction-manager.interface';
 import { TaskType } from '../../shared/enum/task-type.enum';
 import taskNameGenerator from '../../shared/helper/task-name-generator';
 import { TaskService } from '../../task/task.service';
-import { AuctionFinishedEvent } from '../../auction/events/auction-finished.event';
 import { BidPlacedEvent } from '../events/bid-placed.event';
 
 @Injectable()
@@ -15,6 +16,8 @@ export class BidPlacedEmitter {
     private readonly taskService: TaskService,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    @Inject('TransactionManager')
+    private readonly transactionManager: TransactionManagerInterface,
   ) {}
 
   private async deleteTask(
@@ -45,11 +48,24 @@ export class BidPlacedEmitter {
   @OnEvent('bid.placed')
   public async handleBidPlacedLocalEvent(payload: BidPlacedEvent) {
     const { auctionId, userId } = payload;
+    const transactionName = `bid_placed_${auctionId}_${userId}_${Date.now()}`;
 
-    await this.auctionService.updateAuctionPriceBasedOnBid(auctionId);
-    await this.auctionService.updateAuctionWinner(auctionId, userId);
-    await this.scheduleFinishAuctionTask(auctionId);
-    await this.deleteTask(auctionId, TaskType.AuctionExpire);
-    await this.auctionService.processAuctionTick(auctionId);
+    await this.transactionManager.runInTransaction(
+      transactionName,
+      'REPEATABLE READ',
+      async () => {
+        await this.auctionService.updateAuctionPriceBasedOnBid(auctionId, {
+          transactionName,
+        });
+        await this.auctionService.updateAuctionWinner(auctionId, userId, {
+          transactionName,
+        });
+        await this.scheduleFinishAuctionTask(auctionId);
+        await this.deleteTask(auctionId, TaskType.AuctionExpire);
+        await this.auctionService.processAuctionTick(auctionId, {
+          transactionName,
+        });
+      },
+    );
   }
 }

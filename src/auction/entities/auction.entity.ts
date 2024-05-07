@@ -10,8 +10,6 @@ import {
 import { ItemEntity } from '../../item/entities/item.entity';
 import { LocalizedString } from '../../shared/domain/localized-string';
 import { AuctionState } from '../../shared/enum/auction-state.enum';
-import { TicketConfiguration } from '../../ticket-configuration/domain/ticket-configuration';
-import { TicketConfigurationEntity } from '../../ticket-configuration/entites/ticket-configuration.entity';
 import { AuctionLimit } from '../domain/auction';
 
 @Entity({ name: 'auction' })
