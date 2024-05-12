@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDate,
   IsEnum,
@@ -5,14 +6,13 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { ValidationErrorMessage } from '../../../shared/validation/validation-error-message';
-import { Locale } from '../../../shared/enum/locale.enum';
 import { AuctionState } from '../../../shared/enum/auction-state.enum';
-import { AuctionLimit } from '../../domain/auction';
-import { CreateAuctionRequest } from '../../auction.service';
+import { Locale } from '../../../shared/enum/locale.enum';
+import { ObjectIsAuctionRules } from '../../../shared/validation/decorators/auction-limits-object.decorator';
 import { ObjectIsLocalizedString } from '../../../shared/validation/decorators/localized-string.decorator';
-import { ObjectIsAuctionRules } from 'src/shared/validation/decorators/auction-limits-object.decorator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ValidationErrorMessage } from '../../../shared/validation/validation-error-message';
+import { CreateAuctionRequest } from '../../auction.service';
+import { AuctionLimit } from '../../domain/auction';
 
 export class AuctionCreateDto implements CreateAuctionRequest {
   @ApiProperty({

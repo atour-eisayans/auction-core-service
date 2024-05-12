@@ -34,7 +34,7 @@ export class AuctionController {
   })
   public async createAuction(@Body() body: AuctionCreateDto): Promise<string> {
     try {
-      return await this.auctionService.create(body);
+      return await this.auctionService.createAuction(body);
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
@@ -78,14 +78,16 @@ export class AuctionController {
       limits: auction.limits,
       startAt: auction.startAt,
       endedAt: auction.endedAt,
+      currentPrice: auction.currentPrice,
       item: {
         id: auction.item.id,
         name: auction.item.name,
         price: auction.item.price,
-        currency: {
-          id: auction.item.currency.id,
-          code: auction.item.currency.code,
-          symbol: auction.item.currency.symbol,
+        ticketConfiguration: {
+          id: auction.item.ticketConfiguration.id,
+          currency: auction.item.ticketConfiguration.currency,
+          raisingAmount: auction.item.ticketConfiguration.raisingAmount,
+          unitPrice: auction.item.ticketConfiguration.unitPrice,
         },
         category: {
           id: auction.item.category.id,
@@ -120,15 +122,24 @@ export class AuctionController {
 
   @Put('/:id')
   @ApiResponse({
-    status: HttpStatus.NO_CONTENT
+    status: HttpStatus.NO_CONTENT,
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   public async auctionUpdate(
     @Body() body: AuctionUpdateDto,
-    @Param() auctionId: string,
+    @Param('id') auctionId: string,
   ): Promise<void> {
     try {
-      return await this.auctionService.update(body, auctionId);
+      return await this.auctionService.updateAuction(auctionId, body);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  @Post('/:id/start')
+  public async startAuction(@Param('id') auctionId: string): Promise<void> {
+    try {
+      await this.auctionService.startAuction(auctionId);
     } catch (error) {
       throw new InternalServerErrorException(error);
     }

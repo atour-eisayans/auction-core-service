@@ -1,7 +1,3 @@
-import { ItemEntity } from '../../item/entities/item.entity';
-import { AuctionLimit } from '../domain/auction';
-import { AuctionState } from '../../shared/enum/auction-state.enum';
-import { LocalizedString } from '../../shared/domain/localized-string';
 import {
   Column,
   CreateDateColumn,
@@ -11,6 +7,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ItemEntity } from '../../item/entities/item.entity';
+import { LocalizedString } from '../../shared/domain/localized-string';
+import { AuctionState } from '../../shared/enum/auction-state.enum';
+import { AuctionLimit } from '../domain/auction';
 
 @Entity({ name: 'auction' })
 export class AuctionEntity {
@@ -19,6 +19,9 @@ export class AuctionEntity {
 
   @Column({ type: 'jsonb', name: 'name' })
   name!: LocalizedString;
+
+  @Column({ type: 'double precision', name: 'current_price', nullable: true })
+  currentPrice?: number;
 
   @Column({
     type: 'timestamp with time zone',

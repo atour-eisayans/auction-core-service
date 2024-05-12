@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TransactionManger } from './transaction-manager';
 
 @Module({
   imports: [
@@ -19,6 +20,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       inject: [ConfigService],
     }),
   ],
-  exports: [TypeOrmModule],
+  providers: [
+    {
+      provide: 'TransactionManager',
+      useClass: TransactionManger,
+    },
+  ],
+  exports: [TypeOrmModule, 'TransactionManager'],
 })
 export class DatabaseModule {}

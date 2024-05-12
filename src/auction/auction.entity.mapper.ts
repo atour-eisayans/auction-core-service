@@ -4,7 +4,7 @@ import { Auction } from './domain/auction';
 import { ItemEntity } from '../item/entities/item.entity';
 import { Item } from '../item/domain/item';
 import { ItemCategory } from '../item/domain/item-category';
-import { Currency } from '../currency/domain/currency';
+import { TicketConfiguration } from '../ticket-configuration/domain/ticket-configuration';
 
 @Injectable()
 export class AuctionEntityMapper {
@@ -19,6 +19,7 @@ export class AuctionEntityMapper {
       startAt: domain.startAt,
       endedAt: domain.endedAt,
       limits: domain.limits,
+      currentPrice: domain.currentPrice,
     };
   }
 
@@ -33,10 +34,11 @@ export class AuctionEntityMapper {
         }),
         name: entity.item.name,
         price: entity.item.price,
-        currency: new Currency({
-          id: entity.item.currency.id,
-          code: entity.item.currency.code,
-          symbol: entity.item.currency.symbol,
+        ticketConfiguration: new TicketConfiguration({
+          id: entity.item.ticketConfiguration.id,
+          currency: entity.item.ticketConfiguration.currency,
+          raisingAmount: entity.item.ticketConfiguration.raisingAmount,
+          unitPrice: entity.item.ticketConfiguration.unitPrice,
         }),
       }),
       name: entity.name,
@@ -44,6 +46,7 @@ export class AuctionEntityMapper {
       endedAt: entity.endedAt,
       startAt: entity.startAt,
       limits: entity.limits,
+      currentPrice: entity.currentPrice,
     });
   }
 }

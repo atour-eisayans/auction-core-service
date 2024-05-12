@@ -1,14 +1,24 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { BidModule } from '../bid/bid.module';
+import { DatabaseModule } from '../database/database.module';
+import { TaskModule } from '../task/task.module';
+import { UserModule } from '../user/user.module';
 import { AuctionController } from './auction.controller';
-import { AuctionService } from './auction.service';
 import { AuctionEntityMapper } from './auction.entity.mapper';
 import { AuctionRepository } from './auction.repository';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuctionEntity } from './entities/auction.entity';
+import { AuctionService } from './auction.service';
 import { AuctionResultEntity } from './entities/auction-result.entity';
+import { AuctionEntity } from './entities/auction.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AuctionEntity, AuctionResultEntity])],
+  imports: [
+    DatabaseModule,
+    TypeOrmModule.forFeature([AuctionEntity, AuctionResultEntity]),
+    TaskModule,
+    forwardRef(() => BidModule),
+    UserModule,
+  ],
   controllers: [AuctionController],
   providers: [
     AuctionService,
@@ -18,6 +28,6 @@ import { AuctionResultEntity } from './entities/auction-result.entity';
       useClass: AuctionRepository,
     },
   ],
-  exports: [AuctionService, 'AuctionRepositoryInterface'],
+  exports: ['AuctionRepositoryInterface', AuctionService, AuctionEntityMapper],
 })
 export class AuctionModule {}

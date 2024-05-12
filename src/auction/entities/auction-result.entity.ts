@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToOne,
@@ -12,6 +13,7 @@ import { AuctionEntity } from './auction.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 
 @Entity({ name: 'auction_result' })
+@Index(['auction'], { unique: true })
 export class AuctionResultEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

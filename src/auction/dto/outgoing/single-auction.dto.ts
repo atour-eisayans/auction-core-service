@@ -18,6 +18,12 @@ export class SingleAuctionDto {
   item: SingleItemDto;
 
   @ApiProperty({
+    description: 'Current auction price',
+    type: Number,
+  })
+  currentPrice?: number;
+
+  @ApiProperty({
     description: 'Localized name of the auction',
     type: 'object',
   })

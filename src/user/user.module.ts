@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DatabaseModule } from '../database/database.module';
 import { UserTicketBalanceEntity } from './entities/user-ticket-balance.entity';
 import { UserEntity } from './entities/user.entity';
 import { UserController } from './user.controller';
@@ -8,7 +9,10 @@ import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, UserTicketBalanceEntity])],
+  imports: [
+    DatabaseModule,
+    TypeOrmModule.forFeature([UserEntity, UserTicketBalanceEntity]),
+  ],
   controllers: [UserController],
   providers: [
     UserService,
@@ -18,6 +22,6 @@ import { UserService } from './user.service';
       useClass: UserRepository,
     },
   ],
-  exports: [UserService, 'UserRepositoryInterface'],
+  exports: [UserService, 'UserRepositoryInterface', UserEntityMapper],
 })
 export class UserModule {}
