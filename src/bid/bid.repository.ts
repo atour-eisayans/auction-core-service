@@ -159,8 +159,10 @@ export class BidRepository implements BidRepositoryInterface {
         ticketCount: MoreThan(0),
       },
       relations: {
+        user: true,
         auction: {
           item: {
+            category: true,
             ticketConfiguration: true,
           },
         },
@@ -182,5 +184,22 @@ export class BidRepository implements BidRepositoryInterface {
     await automatedBidRepository.delete({
       auction: { id: auctionId },
     });
+  }
+
+  public async setUserLastBidderFlagTrue(
+    auctionId: string,
+    userId: string,
+    persistencyOptions?: PersistencyOptions,
+  ): Promise<void> {
+    const automatedBidRepository =
+      this.getAutomatedBidRepository(persistencyOptions);
+
+    await automatedBidRepository.update(
+      {
+        auction: { id: auctionId },
+        user: { id: userId },
+      },
+      { lastBidder: true },
+    );
   }
 }

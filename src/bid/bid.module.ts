@@ -8,7 +8,6 @@ import { BidController } from './bid.controller';
 import { BidEntityMapper } from './bid.entity.mapper';
 import { BidRepository } from './bid.repository';
 import { BidService } from './bid.service';
-import { BidPlacedEmitter } from './emitters/bid-placed.emitter';
 import { AutomatedBidEntity } from './entities/automated_bid.entity';
 import { BidEntity } from './entities/bid.entity';
 
@@ -28,13 +27,7 @@ import { BidEntity } from './entities/bid.entity';
       provide: 'BidRepositoryInterface',
       useClass: BidRepository,
     },
-    BidPlacedEmitter,
   ],
-  exports: [
-    BidService,
-    'BidRepositoryInterface',
-    BidEntityMapper,
-    BidPlacedEmitter,
-  ],
+  exports: ['BidRepositoryInterface', BidService, BidEntityMapper],
 })
 export class BidModule {}

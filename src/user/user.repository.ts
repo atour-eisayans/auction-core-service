@@ -80,7 +80,7 @@ export class UserRepository implements UserRepositoryInterface {
       const userBalanceRepository =
         this.getUserBalanceRepository(persistencyOptions);
 
-      const entity = await userBalanceRepository.findOneOrFail({
+      const entity = await userBalanceRepository.findOne({
         where: {
           user: {
             id: userId,
@@ -92,12 +92,30 @@ export class UserRepository implements UserRepositoryInterface {
         relations: ['user', 'ticketType'],
       });
 
+      if (!entity) {
+        await userBalanceRepository.save({
+          balance: quantity,
+          ticketType: {
+            id: ticketTypeId,
+          },
+          user: {
+            id: userId,
+          },
+        });
+
+        return quantity;
+      }
+
       const newBalance = entity.balance + quantity;
 
-      await userBalanceRepository.save({
-        id: entity.id,
-        balance: newBalance,
-      });
+      await userBalanceRepository.update(
+        {
+          id: entity.id,
+        },
+        {
+          balance: newBalance,
+        },
+      );
 
       return newBalance;
     } catch (error) {

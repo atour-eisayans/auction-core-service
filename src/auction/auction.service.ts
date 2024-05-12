@@ -2,24 +2,22 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  UnprocessableEntityException,
+  forwardRef,
 } from '@nestjs/common';
-
 import { ConfigService } from '@nestjs/config';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
-import { AuctionStartedEvent } from './events/auction-started.event';
-import { BidPlacedEvent } from '../bid/events/bid-placed.event';
-import { UserService } from '../user/user.service';
 import { BidService } from '../bid/bid.service';
 import type { Item } from '../item/domain/item';
 import { LocalizedString } from '../shared/domain/localized-string';
+import { PersistencyOptions } from '../shared/domain/persistency-options.interface';
+import { TransactionManagerInterface } from '../shared/domain/transaction-manager.interface';
 import { AuctionState } from '../shared/enum/auction-state.enum';
 import { TaskType } from '../shared/enum/task-type.enum';
+import taskNameGenerator from '../shared/helper/task-name-generator';
 import { TaskService } from '../task/task.service';
+import { UserService } from '../user/user.service';
 import { Auction, AuctionLimit } from './domain/auction';
 import { AuctionRepositoryInterface } from './domain/auction.repository.interface';
-import { PersistencyOptions } from '../shared/domain/persistency-options.interface';
 
 export interface CreateAuctionRequest {
   name: LocalizedString;
@@ -51,9 +49,11 @@ export class AuctionService {
     private readonly auctionRepository: AuctionRepositoryInterface,
     private readonly taskService: TaskService,
     private readonly userService: UserService,
+    @Inject(forwardRef(() => BidService))
     private readonly bidService: BidService,
     private readonly configService: ConfigService,
-    private readonly eventEmitter: EventEmitter2,
+    @Inject('TransactionManager')
+    private readonly transactionManager: TransactionManagerInterface,
   ) {}
 
   public async createAuction(
@@ -89,7 +89,6 @@ export class AuctionService {
 
   private mapCreateAuctionRequestToDomain(
     payload: CreateAuctionRequest,
-    persistencyOptions?: PersistencyOptions,
   ): Auction {
     const item = <Item>{ id: payload.itemId };
     return new Auction({
@@ -182,42 +181,170 @@ export class AuctionService {
     );
   }
 
-  public async startAuction(
-    auctionId: string,
-    persistencyOptions?: PersistencyOptions,
-  ): Promise<void> {
-    this.eventEmitter.emit(
-      'auction.started',
-      new AuctionStartedEvent({ auctionId }),
+  private async scheduleExpireAuctionTask(auctionId: string): Promise<string> {
+    const expireTimeout =
+      this.configService.get<number>('AUCTION_EXPIRE_TIMEOUT_HOURS') ?? 1;
+
+    return await this.taskService.scheduleTask(
+      TaskType.AuctionExpire,
+      auctionId,
+      expireTimeout * 60 * 60,
+      async () => {
+        await this.expireAuction(auctionId);
+      },
     );
   }
 
-  public async processAuctionTick(
+  private async calculateInitialPrice(
     auctionId: string,
     persistencyOptions?: PersistencyOptions,
-  ): Promise<void> {
-    const timeout = 20;
+  ): Promise<number> {
+    const auction = await this.findById(auctionId, persistencyOptions);
 
-    await this.taskService.scheduleTask(
-      TaskType.CheckAutomatedBid,
-      auctionId,
-      timeout,
+    const {
+      item: { price: itemOriginalPrice },
+      limits,
+    } = auction;
+
+    const startingPricePercent =
+      ((limits?.item_max_price_percent &&
+        Number(limits?.item_max_price_percent)) ??
+        this.configService.get<number>('ITEM_STARTING_PRICE_PERCENT') ??
+        20) / 100;
+
+    return itemOriginalPrice * startingPricePercent;
+  }
+
+  public async startAuction(auctionId: string): Promise<void> {
+    const transactionName = `auction_started_${auctionId}_${Date.now()}`;
+
+    await this.transactionManager.runInTransaction(
+      transactionName,
+      'REPEATABLE READ',
       async () => {
-        const bidder = await this.bidService.iterateOverAutomatedBids(
+        await this.scheduleExpireAuctionTask(auctionId);
+
+        const initialPrice = await this.calculateInitialPrice(auctionId, {
+          transactionName,
+        });
+
+        await this.updateAuction(
           auctionId,
+          {
+            startAt: new Date(),
+            state: AuctionState.Active,
+            currentPrice: initialPrice,
+          },
+          { transactionName },
         );
 
-        if (bidder) {
-          this.eventEmitter.emit(
-            'bid.placed',
-            new BidPlacedEvent({
-              auctionId,
-              userId: bidder.id,
-            }),
-          );
-        }
+        await this.bidService.processAuctionTick(auctionId);
       },
     );
+  }
+
+  private async deleteTask(
+    auctionId: string,
+    taskType: TaskType,
+  ): Promise<void> {
+    const taskName = taskNameGenerator(taskType, auctionId);
+    await this.taskService.deleteTask(taskName);
+  }
+
+  public async expireAuction(auctionId: string) {
+    const transactionName = `auction_expired_${auctionId}_${Date.now()}`;
+
+    await this.transactionManager.runInTransaction(
+      transactionName,
+      'REPEATABLE READ',
+      async () => {
+        await this.deleteTask(auctionId, TaskType.AuctionExpire);
+        await this.deleteTask(auctionId, TaskType.CheckAutomatedBid);
+
+        await this.updateAuction(
+          auctionId,
+          {
+            state: AuctionState.Expired,
+          },
+          { transactionName },
+        );
+
+        await this.updateAuctionResult(auctionId, new Date(), {
+          transactionName,
+        });
+      },
+    );
+  }
+
+  public async finishAuction(auctionId: string) {
+    const transactionName = `auction_finished_${auctionId}_${Date.now()}`;
+
+    await this.transactionManager.runInTransaction(
+      transactionName,
+      'REPEATABLE READ',
+      async () => {
+        await this.deleteTask(auctionId, TaskType.AuctionFinish);
+        await this.deleteTask(auctionId, TaskType.CheckAutomatedBid);
+
+        await this.updateAuction(
+          auctionId,
+          {
+            state: AuctionState.Finished,
+            endedAt: new Date(),
+          },
+          { transactionName },
+        );
+
+        await this.updateAuctionResult(auctionId, new Date(), {
+          transactionName,
+        });
+
+        const automatedBids = await this.bidService.readAllAutomatedBids(
+          auctionId,
+          { transactionName },
+        );
+
+        const refundPromises = automatedBids.map((bid) =>
+          this.userService.increaseUserTicketBalance(
+            bid.user.id,
+            bid.auction.item.ticketConfiguration.id,
+            bid.ticketCount,
+            { transactionName },
+          ),
+        );
+
+        await Promise.all(refundPromises);
+
+        await this.bidService.removeAllDeprecatedBids(auctionId, {
+          transactionName,
+        });
+      },
+    );
+  }
+
+  private async scheduleFinishAuctionTask(auctionId: string): Promise<string> {
+    const finishTimeout =
+      this.configService.get<number>('AUCTION_FINISH_TIMEOUT_SECONDS') ?? 25;
+
+    return await this.taskService.scheduleTask(
+      TaskType.AuctionFinish,
+      auctionId,
+      finishTimeout,
+      async () => {
+        await this.finishAuction(auctionId);
+      },
+    );
+  }
+
+  public async handleBidPlaced(
+    auctionId: string,
+    userId: string,
+    persistencyOptions?: PersistencyOptions,
+  ) {
+    await this.updateAuctionPriceBasedOnBid(auctionId, persistencyOptions);
+    await this.updateAuctionWinner(auctionId, userId, persistencyOptions);
+    await this.scheduleFinishAuctionTask(auctionId);
+    await this.deleteTask(auctionId, TaskType.AuctionExpire);
   }
 
   public async updateAuctionResult(
@@ -229,41 +356,6 @@ export class AuctionService {
       auctionId,
       finishedAt,
       persistencyOptions,
-    );
-  }
-
-  public async processPlacedBid(
-    auctionId: string,
-    userId: string,
-    persistencyOptions?: PersistencyOptions,
-  ): Promise<void> {
-    const auction = await this.auctionRepository.findById(
-      auctionId,
-      persistencyOptions,
-    );
-
-    if (!auction) {
-      throw new NotFoundException('Auction not found');
-    }
-
-    const {
-      item: { ticketConfiguration },
-    } = auction;
-
-    const userBalance = await this.userService.decreaseUserTicketBalance(
-      userId,
-      ticketConfiguration.id,
-      1,
-      persistencyOptions,
-    );
-
-    if (userBalance === null) {
-      throw new UnprocessableEntityException('User balance is not enough');
-    }
-
-    this.eventEmitter.emit(
-      'bid.placed',
-      new BidPlacedEvent({ auctionId, userId }),
     );
   }
 }

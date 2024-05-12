@@ -33,4 +33,9 @@ export interface BidRepositoryInterface {
     auctionId: string,
     persistencyOptions?: PersistencyOptions,
   ) => void | Promise<void>;
+  setUserLastBidderFlagTrue: (
+    auctionId: string,
+    userId: string,
+    persistencyOptions?: PersistencyOptions,
+  ) => void | Promise<void>;
 }

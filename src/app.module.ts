@@ -1,6 +1,5 @@
-import { Module, Scope } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuctionModule } from './auction/auction.module';
 import { BidModule } from './bid/bid.module';
@@ -12,13 +11,12 @@ import { UserModule } from './user/user.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
-    EventEmitterModule.forRoot(),
     DatabaseModule,
     UserModule,
     TaskModule,
+    BidModule,
     AuctionModule,
     UserModule,
-    BidModule,
   ],
   controllers: [],
   providers: [],
